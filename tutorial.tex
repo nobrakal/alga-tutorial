@@ -418,10 +418,10 @@ Mainly, you can use \verb|sequence :: Monad m => t (m a) -> m (t a)|. Quickly, y
 \subsection{The goal}
 
 Ok, now we are wanting to build something real with all of this. Let's say a social network: one can represent them easily through graphs.
-The marketing team analysed the market, and decided to make something "à la Twitter". 
+The marketing team analysed the market, and decided to make something "à la Twitter". The vertices will be users, and an edge from $x$ to $y$ will denote that $x$ is following $y$.
 
 \subsection{handleRequest}
-The staff meeting has choose you to build the \verb|handleRequest| function:
+The staff meeting has chose you to build the \verb|handleRequest| function:
 \begin{lstlisting}[language=Haskell, frame=single]
 type User = Int
 
@@ -433,7 +433,7 @@ data RequestM = AddUser User
 handleRequestM :: RequestM -> Graph User -> Graph User
 \end{lstlisting}
 
-Ok this is now a pretty simple job, and the implementation is straightforward: 
+Ok this is now a pretty simple job and the implementation is straightforward: 
 \begin{lstlisting}[language=Haskell, frame=single]
 handleRequestM :: RequestM -> Graph User -> Graph User
 handleRequestM (AddUser a) = Overlay (Vertex a)
@@ -451,8 +451,8 @@ handleRequestM (Connect a b) =
     then Connect (Vertex x) (Vertex b)
     else Vertex x )
 \end{lstlisting}
-
-This will take longer to add a connection, but you will ensure that your graph will not be growing too fast:
+In fact, adding a \verb|(Connect (Vertex a) (Vertex b))| is not very alga-friendly. If \verb|a| is connected to 100 people, then \verb|Vertex a| will be 100 times in the representation!
+The modified function will take longer to add a connection (\verb|foldg| has a complexity of $O(n)$), but you will ensure that your graph will not be growing too fast:
 
 \subsection{Inspection}
 Viewing that you implemented your function very quickly, you are being asked to help one of your co-worker on his function. He was working about the \verb|getFollowing :: User -> Graph User -> [User]| function.
@@ -473,7 +473,7 @@ getFollowers u =
 \end{lstlisting}
 
 \subsection{Going IO}
-Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected ::| \verb|User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| ont the list of the vertices, you quickly answer:
+Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected ::| \verb|User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| on the list of the vertices, you quickly answer:
 \begin{lstlisting}[language=Haskell, frame=single]
 numberOfConnected :: Graph User -> IO Int
 numberOfConnected = fmap (length . filter id) .
