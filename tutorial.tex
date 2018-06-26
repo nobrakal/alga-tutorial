@@ -171,8 +171,8 @@ Do you remind when you have discovered that you can mix $+$ and $*$ in the same 
 \end{lstlisting}
 Here, connecting the single vertex 1 to both 2 and 3 can be done of two \emph{equivalent} ways: 
 \begin{itemize}
-	\item either you are connecting 1 to 2 and 3 overlayed
-	\item or you are overlaying the two edges \verb|(1,2)| \verb|(1,3)|
+	\item either you are connecting 1 to 2 and 3 "overlayed".
+	\item or you are overlaying the two edges \verb|(1,2)| and \verb|(1,3)|
 \end{itemize}
 
 Whew, this is done we can  make a step forward.
@@ -195,8 +195,8 @@ vertices = foldr (\v g -> Overlay (Vertex v) g) Empty
 Any idea how to do \verb|edges :: [(a,a)] -> Graph a|? The same way, obviously:
 
 \begin{lstlisting}[language=Haskell, frame=single]
-vertices :: [a] -> Graph a
-vertices = foldr 
+edges :: [(a,a)] -> Graph a
+edges = foldr 
   (\(x,y) g -> Overlay (Connect (Vertex x) (Vertex y)) g)
   Empty
 \end{lstlisting}
@@ -224,7 +224,7 @@ foldg e v o c = go
 \end{lstlisting}
 In other words, the \verb|foldg| function take a base case for \verb|Empty| graphs, something to transform a \verb|Vertex|, and combining functions when we encounter \verb|Overlay| or \verb|Connect|.
 
-\subsection{Transpose}
+\subsection{transpose}
 
 We have a wonderful graph and we want to \verb|transpose| it. Transposing an oriented graph consist in inverting the orientation of all edges. Using \verb|foldg|, this is a piece of cake:
 
@@ -233,7 +233,7 @@ transpose :: Graph a -> Graph a
 transpose = foldg Empty Vertex Overlay (flip Connect)
 \end{lstlisting}
 
-\subsection{Induce}
+\subsection{induce}
 
 Still not convinced? Let's try to build an induced sub-graph. An induced sub-graph is a sub-graph that "forget" about some vertices and all edges to and from these vertices.
 
@@ -250,7 +250,7 @@ induce predicate = foldg
   undefined
 \end{lstlisting}
 
-Then if we encounter a vertex, we need to verify if it satisfy the predicate. If it does not, we will simply replace it\ldots let's say by the empty graph!
+Then if we encounter a vertex, we need to verify if it satisfy the predicate. If it does not, we will simply replace it\ldots  Let's say by the empty graph!
 
 \begin{lstlisting}[language=Haskell, frame=single]
 induce :: (a -> Bool) -> Graph a -> Graph a
@@ -284,10 +284,11 @@ removeVertex x = induce (/=x)
 \subsection{hasEdge}
 \verb|foldg| and \verb|induce| are so cool that a good part of the Alga API is made from them. For example, let's take a look at the \verb|hasEdge| definition:
 \begin{lstlisting}[language=Haskell, frame=single]
-hasEdge :: a -> a -> Graph a -> Graph a
+hasEdge :: Ord a => a -> a -> Graph a -> Graph a
 hasEdge u v = (Connect (Vertex u) (Vertex v) `isSubgraphOf`) . induce (`elem` [u, v])
 \end{lstlisting}
 To check if a graph contains an edge from $x$ to $y$, you can remove every vertices different of $x$ and $y$, and then check if the edge \emph{alone} is a sub-graph of the induced sub-graph.
+Note that \verb|hasEdge| is requiring an \verb|Ord| instance because \verb|isSubgraphOf| is requiring it.
 
 \section{The problems of the definition}
 \subsection{Equality}
@@ -335,7 +336,7 @@ Vertex 0
 >>> close x == close y
 False
 \end{lstlisting}
-For the moment, one can mess the internal structure!
+For the moment, one can mess the internal structure, and the equality loose is meaning (ie $\forall (f: Graph \ A -> Graph \ B) : g = y \implies f \ g = f \ y$ does NOT hold ).
  
 \section{Useful instances}
 Alga's graphs are instance of some classical Haskell's \verb|Class|:
@@ -461,23 +462,42 @@ One possible way is to use the \verb|edgeList :: Ord a => Graph a -> [(a,a)]| fu
 \begin{lstlisting}[language=Haskell, frame=single]
 getFollowing :: User -> Graph User -> [User]
 getFollowing u =
-  map snd . filter (\(u',_) -> u' == u ) . edgeList
+  map snd . filter (\(v,_) -> u == v ) . edgeList
 \end{lstlisting}
 
 you can even implement blindly the \verb|getFollowers| function:
 \begin{lstlisting}[language=Haskell, frame=single]
 getFollowers :: User -> Graph User -> [User]
 getFollowers u =
-  map fst . filter (\(_,u') -> u' == u ) . edgeList
+  map fst . filter (\(_,v) -> u == v ) . edgeList
 \end{lstlisting}
 
 \subsection{Going IO}
-Ok, pure \verb|Graph| inspection is cool, but how do inspect but with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected :: User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse|, you quickly answer:
+Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected ::| \verb|User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| ont the list of the vertices, you quickly answer:
 \begin{lstlisting}[language=Haskell, frame=single]
 numberOfConnected :: Graph User -> IO Int
 numberOfConnected = fmap (length . filter id) .
   traverse isConnected . 
   vertexList
+\end{lstlisting}
+
+Note that this version is easy to understand and to write, but nor very efficient. One can write a more efficient one using \verb|foldg| and \verb|IntSet|:
+\begin{lstlisting}[language=Haskell, frame=single]
+import qualified Data.IntSet as Set
+import Control.Applicative (liftA2)
+
+numberOfConnected :: Graph User -> IO Int
+numberOfConnected = fmap Set.size . foldg
+  (return Set.empty)
+  (\x -> fmap
+    (\y -> if y
+       then Set.singleton x
+       else Set.empty
+    )
+    (isConnected x)
+  )
+  (liftA2 Set.union)
+  (liftA2 Set.union)
 \end{lstlisting}
 
 \end{document}
