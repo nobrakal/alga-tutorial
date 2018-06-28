@@ -17,7 +17,7 @@
 \section{Introduction}
 
 Here you will learn the basis of \href{http://hackage.haskell.org/package/algebraic-graphs}{Alga}, an implementation of an algebra of graphs.
-Every given example is runnable, so please feel free to install alga (with \verb|cabal| or \verb|stack|) and have a GHCi console near you if you want to try the code. All you need to have is inside the \verb|Algebra.Graph| module.
+Every given example is runnable, so please feel free to install alga (with \verb|cabal| or \verb|stack|) and have a GHCi console near you if you want to try the code. All you need to have is inside the \verb|Algebra.Graph| module. Don't hesitate to have a look at the \href{http://hackage.haskell.org/package/algebraic-graphs-0.1.1.1/docs/Algebra-Graph.html}{module documentation} if you want more informations.
 \\
 \\
 If you encounter any bug (I hope that you will not), please open an issue at \url{https://github.com/snowleopard/alga/issues/}.
@@ -285,7 +285,9 @@ removeVertex x = induce (/=x)
 \verb|foldg| and \verb|induce| are so cool that a good part of the Alga API is made from them. For example, let's take a look at the \verb|hasEdge| definition:
 \begin{lstlisting}[language=Haskell, frame=single]
 hasEdge :: Ord a => a -> a -> Graph a -> Graph a
-hasEdge u v = (Connect (Vertex u) (Vertex v) `isSubgraphOf`) . induce (`elem` [u, v])
+hasEdge u v = 
+	(Connect (Vertex u) (Vertex v) `isSubgraphOf`) . 
+	induce (`elem` [u, v])
 \end{lstlisting}
 To check if a graph contains an edge from $x$ to $y$, you can remove every vertices different of $x$ and $y$, and then check if the edge \emph{alone} is a sub-graph of the induced sub-graph.
 Note that \verb|hasEdge| is requiring an \verb|Ord| instance because \verb|isSubgraphOf| is requiring it.
@@ -336,10 +338,10 @@ Vertex 0
 >>> close x == close y
 False
 \end{lstlisting}
-For the moment, one can mess the internal structure, and the equality loose is meaning (ie $\forall (f: Graph \ A -> Graph \ B) : g = y \implies f \ g = f \ y$ does NOT hold ).
+For the moment, one can mess the internal structure, and the equality loose its meaning (ie $\forall (f: Graph \ A -> Graph \ B) : g = y \implies f \ g = f \ y$ does NOT hold ).
  
 \section{Useful instances}
-Alga's graphs are instance of some classical Haskell's \verb|Class|:
+Alga's graphs are instance of some classical Haskell \verb|Class|:
 
 \subsection{Eq, Show}
 Of course, you have Graph equality, and you can show a Graph.
@@ -401,7 +403,7 @@ In fact, you can use the \verb|Foldable| instance by thinking a graph like a lis
 toList ((0 + 1) + ((0*2) + 3)) == [0,1,0,2,3]
 \end{lstlisting}
 
-Alga is providing a faster \verb|toList| based on \verb|vertexSet| and thus, requiring an \verb|Ord| instance on the vertices. Moreover, \verb|vertexList| give vertices in \emph{ascending order}
+Alga is providing a faster \verb|toList| (called \verb|vertexList|) based on \verb|vertexSet| and thus, requiring an \verb|Ord| instance on the vertices. Moreover, \verb|vertexList| give vertices in \emph{ascending order}.
 \\
 Keep this in mind:
 \begin{lstlisting}[language=Haskell, frame=single]
@@ -412,7 +414,7 @@ sort . nub . toList == vertexList
 \subsection{Traversable}
 More than \verb|Foldable| you have a \verb|Traversable| instance for \verb|Graph|.
 
-Mainly, you can use \verb|sequence :: Monad m => t (m a) -> m (t a)|. Quickly, you can ``strip-out`` a monadic effects. For example, if you have a \verb|Graph (Maybe a)| with leaves set as \verb|Maybe a|, you can have a \verb|Maybe (Graph a)|, set to \verb|Nothing| is there was one \verb|Nothing| leaf, and \verb|Just gr| if there was \emph{only} \verb|Just| leaves.
+Mainly, you can use \verb|sequence :: Monad m => t (m a) -> m (t a)|. Quickly, you can ``strip-out`` a monadic effects. For example, if you have a \verb|Graph (Maybe a)| with leaves set as \verb|Maybe a|, you can have a \verb|Maybe (Graph a)|, set to \verb|Nothing| is there was at least \verb|Nothing| leaf, and \verb|Just gr| if there was \emph{only} \verb|Just| leaves.
 
 \section{An example: A social network}
 \subsection{The goal}
@@ -427,8 +429,8 @@ type User = Int
 
 data RequestM = AddUser User
 			  | RemoveUser User
-			  | Connect User User
-			  | Disconnect User User
+			  | ConnectU User User
+			  | DisconnectU User User
 
 handleRequestM :: RequestM -> Graph User -> Graph User
 \end{lstlisting}
@@ -438,24 +440,25 @@ Ok this is now a pretty simple job and the implementation is straightforward:
 handleRequestM :: RequestM -> Graph User -> Graph User
 handleRequestM (AddUser a) = Overlay (Vertex a)
 handleRequestM (RemoveUser a) = removeVertex a
-handleRequestM (Connect a b) = 
+handleRequestM (ConnectU a b) = 
 	Overlay (Connect (Vertex a) (Vertex b))
-handleRequestM (Disconnect a b) = removeEdge a b
+handleRequestM (DisconnectU a b) = removeEdge a b
 \end{lstlisting}
 
 \subsection{Space is important}
-Your company is looking to have many users, so maybe the \verb|Connect| is not very wise. On the advice of your superior, you can change it to:
+Your company is looking to have many users, so maybe the \verb|ConnectU| is not very wise. In fact, adding a \verb|(Connect (Vertex a) (Vertex b))| is not very alga-friendly. If \verb|a| is connected to 100 people, then \verb|Vertex a| will be 100 times in the representation!
+\\
+On the advice of your superior, you can change it to:
 \begin{lstlisting}[language=Haskell, frame=single]
-handleRequestM (Connect a b) = 
+handleRequestM (ConnectU a b) = 
   (>>=) (\x -> if x == a 
     then Connect (Vertex x) (Vertex b)
     else Vertex x )
 \end{lstlisting}
-In fact, adding a \verb|(Connect (Vertex a) (Vertex b))| is not very alga-friendly. If \verb|a| is connected to 100 people, then \verb|Vertex a| will be 100 times in the representation!
-The modified function will take longer to add a connection (\verb|foldg| has a complexity of $O(n)$), but you will ensure that your graph will not be growing too fast:
+The modified function will take longer to add a connection (\verb|foldg| has a complexity of $O(n)$), but you will ensure that your graph will not grow too fast:
 
 \subsection{Inspection}
-Viewing that you implemented your function very quickly, you are being asked to help one of your co-worker on his function. He was working about the \verb|getFollowing :: User -> Graph User -> [User]| function.
+Viewing that you implemented your function very quickly, you are being asked to help one of your co-workers on his function. He was working about the \verb|getFollowing :: User -> Graph User -> [User]| function.
 
 One possible way is to use the \verb|edgeList :: Ord a => Graph a -> [(a,a)]| function.
 
@@ -473,7 +476,7 @@ getFollowers u =
 \end{lstlisting}
 
 \subsection{Going IO}
-Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected ::| \verb|User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| on the list of the vertices, you quickly answer:
+Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected| \verb|:: User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| on the list of the vertices, you quickly answer:
 \begin{lstlisting}[language=Haskell, frame=single]
 numberOfConnected :: Graph User -> IO Int
 numberOfConnected = fmap (length . filter id) .
