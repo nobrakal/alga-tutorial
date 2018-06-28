@@ -70,7 +70,7 @@ This definition allow us to deal with \emph{oriented} graphs: An edge from verte
 So, how to use this definition? Here some examples:
 
 \begin{itemize}
-	\item A single path, from a vertex 0 to a vertex 1 can be viewed as \verb|Connect (Vertex 0) (Vertex 1)| 
+	\item A single path, from a vertex 0 to a vertex 1 can be viewed as \verb|Connect (Vertex 0) (Vertex 1)|
 	\begin{center}
 	\includegraphics[scale=0.5]{figspng/e2.png}
 	\end{center}
@@ -169,7 +169,7 @@ Do you remind when you have discovered that you can mix $+$ and $*$ in the same 
 \begin{lstlisting}[language=Haskell, frame=single]
 1 * (2 + 3) == 1 * 2 + 1 * 3
 \end{lstlisting}
-Here, connecting the single vertex 1 to both 2 and 3 can be done of two \emph{equivalent} ways: 
+Here, connecting the single vertex 1 to both 2 and 3 can be done of two \emph{equivalent} ways:
 \begin{itemize}
 	\item either you are connecting 1 to 2 and 3 ``overlayed``.
 	\item or you are overlaying the two edges \verb|(1,2)| and \verb|(1,3)|
@@ -196,7 +196,7 @@ Any idea how to do \verb|edges :: [(a,a)] -> Graph a|? The same way, obviously:
 
 \begin{lstlisting}[language=Haskell, frame=single]
 edges :: [(a,a)] -> Graph a
-edges = foldr 
+edges = foldr
   (\(x,y) g -> Overlay (Connect (Vertex x) (Vertex y)) g)
   Empty
 \end{lstlisting}
@@ -244,7 +244,7 @@ What is the base case? Do we need to change an \verb|Empty| graph? No of course:
 \begin{lstlisting}[language=Haskell, frame=single]
 induce :: (a -> Bool) -> Graph a -> Graph a
 induce predicate = foldg
-  Empty 
+  Empty
   undefined
   undefined
   undefined
@@ -254,26 +254,26 @@ Then if we encounter a vertex, we need to verify if it satisfy the predicate. If
 
 \begin{lstlisting}[language=Haskell, frame=single]
 induce :: (a -> Bool) -> Graph a -> Graph a
-induce predicate = foldg 
+induce predicate = foldg
   Empty
   (\x -> if predicate x then Vertex x else Empty)
   undefined
   undefined
 \end{lstlisting}
- 
+
 And finally do we need to touch connection between base graphs? Not at all! Remember, \verb|Empty| is the neutral element of \emph{both} \verb|Connect| and \verb|Overlay|. So we can leave our empty graphs inside the structure without problem (don't worry, the real implementation get rid of these empty leaves). So we come to:
 
 \begin{lstlisting}[language=Haskell, frame=single]
 induce :: (a -> Bool) -> Graph a -> Graph a
-induce predicate = foldg 
-  Empty 
+induce predicate = foldg
+  Empty
   (\x -> if predicate x then Vertex x else Empty)
   Overlay
   Connect
 \end{lstlisting}
 
 So simple, isn't it?
- 
+
 This even allow us to define:
 
 \begin{lstlisting}[language=Haskell, frame=single]
@@ -285,8 +285,8 @@ removeVertex x = induce (/=x)
 \verb|foldg| and \verb|induce| are so cool that a good part of the Alga API is made from them. For example, let's take a look at the \verb|hasEdge| definition:
 \begin{lstlisting}[language=Haskell, frame=single]
 hasEdge :: Ord a => a -> a -> Graph a -> Graph a
-hasEdge u v = 
-	(Connect (Vertex u) (Vertex v) `isSubgraphOf`) . 
+hasEdge u v =
+	(Connect (Vertex u) (Vertex v) `isSubgraphOf`) .
 	induce (`elem` [u, v])
 \end{lstlisting}
 To check if a graph contains an edge from $x$ to $y$, you can remove every vertices different of $x$ and $y$, and then check if the edge \emph{alone} is a sub-graph of the induced sub-graph.
@@ -299,15 +299,15 @@ There is no canonical way to define a graph in alga. For example:
 Overlay (Vertex 1) (Vertex 2)
 == Overlay (Vertex 2) (Vertex 1)
 == Connect Empty (Overlay (Vertex 1) (Vertex 2))
-== Overlay 
+== Overlay
   (Connect (Vertex 1) Empty)
   (Connect Empty (Vertex 2))
 \end{lstlisting}
- 
+
 Fortunately, you don't have to bother with the internal definition since the \verb|Eq| instance (which provide \verb|(==)|) take care of this problem for you.
 
 Alga is also providing \verb|(===)| which denote \emph{structural} equality, and thus
- 
+
 \begin{lstlisting}[language=Haskell, frame=single]
 Overlay (Vertex 1) (Vertex 2)
 ===
@@ -339,7 +339,7 @@ Vertex 0
 False
 \end{lstlisting}
 For the moment, one can mess the internal structure, and the equality loose its meaning (ie $\forall (f: Graph \ A -> Graph \ B) : g = y \implies f \ g = f \ y$ does NOT hold ).
- 
+
 \section{Useful instances}
 Alga's graphs are instance of some classical Haskell \verb|Class|:
 
@@ -355,7 +355,7 @@ instance Functor (Graph a) where
   fmap f (Overlay a b) = Overlay (fmap f a) (fmap f b)
   fmap f (Connect a b) = Connect (fmap f a) (fmap f b)
 \end{lstlisting}
- 
+
 This means that if you have something to transform a \verb|a| in a \verb|b| then you can transform a \verb|Graph a| into a \verb|Graph b|. For example:
 
 \begin{center}
@@ -372,7 +372,7 @@ Alert! Alert! Haskeller's alarms are ringing! If there is a \verb|Functor| insta
 \begin{lstlisting}[language=Haskell, frame=single]
 instance Monad (Graph a) where
   return  = Vertex
-  g >>= f = foldg Empty f Connect Overlay g 
+  g >>= f = foldg Empty f Connect Overlay g
 \end{lstlisting}
 
 You can convert anything into a graph, simply by transforming it in a single vertex. Moreover, if you can produce a graph from a type \verb|a| then you can replace every vertex of a \verb|Graph a| with the result, transforming it into a \verb|Graph b|.
@@ -388,12 +388,12 @@ induce predicate g
 \subsection{Foldable}
 We can in fact define a \verb|Foldable| instance for \verb|Graph|.
 
-This means that you have access to ``lists-like`` functions (like \verb|elem|, \verb|null|). 
+This means that you have access to ``lists-like`` functions (like \verb|elem|, \verb|null|).
 
 \subsubsection{toList}
 It provide also a \verb|toList| function, but WARNING, this is not what you think! It literally transform a graph into a list, so if you had a self-loop or any time two vertices, then you will have two times the same vertex.
 
-In fact, you can use the \verb|Foldable| instance by thinking a graph like a list. For example, 
+In fact, you can use the \verb|Foldable| instance by thinking a graph like a list. For example,
 
 \begin{center}
 	\includegraphics[scale=0.5]{figspng/foldable.png}
@@ -435,12 +435,12 @@ data RequestM = AddUser User
 handleRequestM :: RequestM -> Graph User -> Graph User
 \end{lstlisting}
 
-Ok this is now a pretty simple job and the implementation is straightforward: 
+Ok this is now a pretty simple job and the implementation is straightforward:
 \begin{lstlisting}[language=Haskell, frame=single]
 handleRequestM :: RequestM -> Graph User -> Graph User
 handleRequestM (AddUser a) = Overlay (Vertex a)
 handleRequestM (RemoveUser a) = removeVertex a
-handleRequestM (ConnectU a b) = 
+handleRequestM (ConnectU a b) =
 	Overlay (Connect (Vertex a) (Vertex b))
 handleRequestM (DisconnectU a b) = removeEdge a b
 \end{lstlisting}
@@ -450,8 +450,8 @@ Your company is looking to have many users, so maybe the \verb|ConnectU| is not 
 \\
 On the advice of your superior, you can change it to:
 \begin{lstlisting}[language=Haskell, frame=single]
-handleRequestM (ConnectU a b) = 
-  (>>=) (\x -> if x == a 
+handleRequestM (ConnectU a b) =
+  (>>=) (\x -> if x == a
     then Connect (Vertex x) (Vertex b)
     else Vertex x )
 \end{lstlisting}
@@ -480,7 +480,7 @@ Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your super
 \begin{lstlisting}[language=Haskell, frame=single]
 numberOfConnected :: Graph User -> IO Int
 numberOfConnected = fmap (length . filter id) .
-  traverse isConnected . 
+  traverse isConnected .
   vertexList
 \end{lstlisting}
 
