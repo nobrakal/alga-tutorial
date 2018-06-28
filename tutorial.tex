@@ -455,7 +455,7 @@ handleRequestM (ConnectU a b) =
     then Connect (Vertex x) (Vertex b)
     else Vertex x )
 \end{lstlisting}
-The modified function will take longer to add a connection (\verb|foldg| has a complexity of $O(n)$), but you will ensure that your graph will not grow too fast:
+The modified function will take longer to add a connection (\verb|foldg| has a complexity of $O(n)$), but you will ensure that your graph will not grow too fast (if and only if there is not multiple \verb|Vertex a| hidden in the representation).
 
 \subsection{Inspection}
 Viewing that you implemented your function very quickly, you are being asked to help one of your co-workers on his function. He was working about the \verb|getFollowing :: User -> Graph User -> [User]| function.
@@ -476,7 +476,7 @@ getFollowers u =
 \end{lstlisting}
 
 \subsection{Going IO}
-Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO. Your superior want to know from time to time who is connected. He has wrote \verb|isConnected| \verb|:: User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| on the list of the vertices, you quickly answer:
+Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO? Your superior want to know from time to time how many users are connected. He has wrote \verb|isConnected| \verb|:: User -> IO Bool|, and he is asking you to write \verb|numberOfConnected| \verb|:: Graph User -> IO Int|. Using \verb|traverse| on the list of the vertices, you quickly answer:
 \begin{lstlisting}[language=Haskell, frame=single]
 numberOfConnected :: Graph User -> IO Int
 numberOfConnected = fmap (length . filter id) .

@@ -18,7 +18,7 @@ done
 
 sed -i "s|</header>|</header>\n<nav>\n<ol>$INNAV\n</ol></nav>|" tutorial.html
 
-LST="figspng/connect.png figspng/overlay.png figspng/fmap.png figspng/absorb.png"
+LST="figspng/connect.png figspng/overlay.png figspng/fmap.png figspng/saturate.png"
 for f in $LST
 do
   sed -i "s|<img src=\"$f\"|<img src=\"$f\" class=\"big\"|" tutorial.html
