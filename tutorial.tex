@@ -113,7 +113,7 @@ This means that, in a context of a \verb|Graph|, we have \verb|Vertex 1 == 1|, w
 Do you see why alga is an implementation of an \emph{algebra} of graphs? There is a lot of maths here! No please don't run away like you have seen a zombie in a graveyard!  Don't worry, this is not-so-difficult math.
 
 \paragraph{Note}
-We will use the \verb|(+)| and \verb|(*)| notation, but these laws are true even when dealing with non-Num instances.
+We will use the \verb|(+)| and \verb|(*)| notation, but these laws are true even when dealing for any graphs.
 
 \subsection{Overlay}
 
@@ -122,17 +122,17 @@ As usual, \verb|(+)| is \emph{associative} (the order in which you are choosing 
 (1 + 2) + 3 == 1 + (2 + 3)
 \end{lstlisting}
 
-It is also \emph{commutative} (the order in which to overlay is not important):
+\verb|(+)| is also \emph{commutative} (overlaying $a$ and $b$ is the same as overlaying $b$ and $a$):
 \begin{lstlisting}[language=Haskell, frame=single]
 1 + 2 == 2 + 1
 \end{lstlisting}
 
-It has \verb|Empty| as a neutral element (overlaying an Empty graph to another graph is this graph):
+\verb|(+)| has \verb|Empty| as a neutral element (overlaying an Empty graph to another graph is this graph):
 \begin{lstlisting}[language=Haskell, frame=single]
 1 + Empty == 1 == Empty + 1
 \end{lstlisting}
 
-It is \emph{idempotent} (overlaying a graph with itself is the same graph):
+\verb|(+)| is \emph{idempotent} (overlaying a graph with itself is the same graph):
 \begin{lstlisting}[language=Haskell, frame=single]
 1 + 1 == 1
 \end{lstlisting}
@@ -143,17 +143,17 @@ As usual, \verb|(*)| is \emph{associative} (the order in which you are choosing 
 (1 * 2) * 3 == 1 * (2 * 3)
 \end{lstlisting}
 
-It is NOT \emph{commutative} (drawing an edge from vertex 1 to vertex 2 is not the same as drawing an edge from vertex 2 to vertex 1):
+\verb|(*)| is NOT \emph{commutative} (drawing an edge from vertex 1 to vertex 2 is not the same as drawing an edge from vertex 2 to vertex 1):
 \begin{lstlisting}[language=Haskell, frame=single]
 1 * 2 /= 2 * 1
 \end{lstlisting}
 
-And it has \verb|Empty| as a neutral element (connecting an Empty graph to another graph is this graph):
+\verb|(*)| it has \verb|Empty| as a neutral element (connecting an Empty graph to another graph is this graph):
 \begin{lstlisting}[language=Haskell, frame=single]
 1 * Empty == 1 == Empty * 1
 \end{lstlisting}
 
-It can saturate (connecting three times the same graph is the same as connecting two times the same graph)
+\verb|(*)| can saturate (connecting three times the same graph is the same as connecting two times the same graph)
 \begin{lstlisting}[language=Haskell, frame=single]
 1 * 1 * 1 == 1 * 1
 \end{lstlisting}
@@ -338,16 +338,16 @@ Vertex 0
 >>> close x == close y
 False
 \end{lstlisting}
-For the moment, one can mess the internal structure, and the equality loose its meaning (ie $\forall (f: Graph \ A -> Graph \ B) : g = y \implies f \ g = f \ y$ does NOT hold ).
+For the moment, one can mess the internal structure, and the equality loose its meaning (ie $\forall (f: Graph \ A \to Graph \ B) : g = y \implies f \ g = f \ y$ does NOT hold ).
 
 \section{Useful instances}
-Alga's graphs are instance of some classical Haskell \verb|Class|:
+Alga's graphs are instance of some classical Haskell classes:
 
 \subsection{Eq, Show}
-Of course, you have Graph equality, and you can show a Graph.
+Of course, you have Graph equality, and you can show a Graph. Alga can also export to the \emph{DOT file format} through the \verb|Algebra.Graph.Export.Dot| module.
 
 \subsection{Functor}
-Not so surprisingly, \verb|Graph| is an instance of \verb|Functor|
+Not so surprisingly, \verb|Graph| is an instance of \verb|Functor|:
 \begin{lstlisting}[language=Haskell, frame=single]
 instance Functor (Graph a) where
   fmap _ Empty = Empty
@@ -388,7 +388,7 @@ induce predicate g
 \subsection{Foldable}
 We can in fact define a \verb|Foldable| instance for \verb|Graph|.
 
-This means that you have access to ``lists-like`` functions (like \verb|elem|, \verb|null|).
+This means that you have access to ``lists-like`` functions (like \verb|elem|, \verb|null|). These functions are useful but \emph{not} optimized.
 
 \subsubsection{toList}
 It provide also a \verb|toList| function, but WARNING, this is not what you think! It literally transform a graph into a list, so if you had a self-loop or any time two vertices, then you will have two times the same vertex.
