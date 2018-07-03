@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>An Alga tutorial</title>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head><style>
+body {
+  padding: 3% 5%;
+  counter-reset: part;
+}
+
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2% 0%;
+  width: 25%;
+}
+
+.big {
+  width: 55%;
+}
+
+h1::before {
+  counter-increment: part;
+  content: "Part " counter(part) ". ";
+}
+
+h1.title::before {
+  content: none;
+  counter-increment: none;
+}
+
+pre {
+  padding: 0.5%;
+}
+
+.verbated {
+  background-color: lightgrey;
+  padding: 0.1%;
+}
+</style>
+<body>
+<header>
+<h1 class="title">An Alga tutorial</h1>
+</header>
+<nav>
+<ol>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#the-graph-definition">The graph definition</a></li>
+<li><a href="#going-deeper-in-the-definition">Going deeper in the definition</a></li>
+<li><a href="#the-benefits-of-the-definition">The benefits of the definition</a></li>
+<li><a href="#the-problems-of-the-definition">The problems of the definition</a></li>
+<li><a href="#useful-instances">Useful instances</a></li>
+<li><a href="#an-example-a-social-network">An example a social network</a></li>
+</ol></nav>
+
+
+<h1 id="introduction">Introduction</h1>
+<p>Here you will learn the basis of <a href="http://hackage.haskell.org/package/algebraic-graphs">Alga</a>, an implementation of an algebra of graphs. Every given example is runnable, so please feel free to install alga (with <code class="verbated">cabal</code> or <code class="verbated">stack</code>) and have a GHCi console near you if you want to try the code. All you need to have is inside the <code class="verbated">Algebra.Graph</code> module. Don’t hesitate to have a look at the <a href="http://hackage.haskell.org/package/algebraic-graphs-0.1.1.1/docs/Algebra-Graph.html">module documentation</a> if you want more informations.<br />
+<br />
+If you encounter any bug (I hope that you will not), please open an issue at <a href="https://github.com/snowleopard/alga/issues/" class="uri">https://github.com/snowleopard/alga/issues/</a>.</p>
+<h1 id="the-graph-definition">The graph definition</h1>
+<h2 id="the-problem">The problem</h2>
+<p>Graphs are traditionally defined as a pair comprising a set <span class="math inline"><em>V</em></span> of vertices and a set <span class="math inline"><em>E</em> ⊆ <em>V</em> × <em>V</em></span> of edges. This is great when working with traditional imperative languages, but leads to some problems when trying to use it in functional languages such as Haskell.</p>
+<p>The idea of alga is to use an other definition of graph, more “functional-friendly“. And as the most part of the “functional-friendly” data structures is recursive, such is the alga’s graph definition:</p>
+<h2 id="a-solution">A solution</h2>
+<div class="sourceCode" id="cb1" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Graph</span> a <span class="fu">=</span> <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">             <span class="fu">|</span> <span class="dt">Vertex</span> a</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">             <span class="fu">|</span> <span class="dt">Overlay</span> (<span class="dt">Graph</span> a) (<span class="dt">Graph</span> a)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">             <span class="fu">|</span> <span class="dt">Connect</span> (<span class="dt">Graph</span> a) (<span class="dt">Graph</span> a)</a></code></pre></div>
+<p>So it says:</p>
+<ol>
+<li><p>You have an only way to construct the empty graph, using the constructor <code class="verbated">Empty</code> which does not take any argument.</p></li>
+<li><p>You can construct a graph from anything, transforming it in a single vertex, using the constructor <code class="verbated">Vertex</code>.</p></li>
+<li><p>You can overlay two graphs, that is just to put them next one to another.</p>
+<p><img src="figspng/overlay.png" class="big" alt="image" /></p></li>
+<li><p>You can connect two graphs, that is drawing an edge from each vertex of the left side to each vertex to the right side.</p>
+<p><img src="figspng/connect.png" class="big" alt="image" /></p></li>
+</ol>
+<p>Simple, no? … Well ok this is not a standard way to see a graph, but don’t worry, you will get used to it.</p>
+<p>Just remember: <em>The only way to create edges is using</em> <code class="verbated">Connect</code>.</p>
+<p>This definition allow us to deal with <em>oriented</em> graphs: An edge from vertex 1 to vertex 2 is NOT the same than an edge from vertex 2 to vertex 1.</p>
+<h2 id="some-examples">Some examples</h2>
+<p>So, how to use this definition? Here some examples:</p>
+<ul>
+<li><p>A single path, from a vertex 0 to a vertex 1 can be viewed as <code class="verbated">Connect (Vertex 0) (Vertex 1)</code></p>
+<p><img src="figspng/e2.png" alt="image" /></p></li>
+<li><p>A triangle, with an edge from vertex 0 to vertex 1, an edge from vertex 0 to vertex 2, and an edge from vertex 1 to vertex 2 can be viewed as <code class="verbated">Connect (Vertex 0) (Connect (Vertex 1) (Vertex 2))</code>.</p>
+<p><img src="figspng/e1.png" alt="image" /></p></li>
+</ul>
+<p>I heard you from my desktop:</p>
+<blockquote>
+<p>“Berk, but writing big graphs by hand can become very annoying !“</p>
+</blockquote>
+<p>Don’t worry, there are some shortcuts.</p>
+<h1 id="going-deeper-in-the-definition">Going deeper in the definition</h1>
+<h2 id="the-num-instance">The Num instance</h2>
+<p><code class="verbated">Overlay</code> and <code class="verbated">Connect</code> look like operators, and we want to use them as. So we pose:</p>
+<div class="sourceCode" id="cb2" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1">(<span class="fu">+</span>) <span class="fu">=</span> <span class="dt">Overlay</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">(<span class="fu">*</span>) <span class="fu">=</span> <span class="dt">Connect</span></a></code></pre></div>
+<p>In fact, if we have something of the <code class="verbated">Num</code> instance, we can transform it directly into a graph using <code class="verbated">Vertex</code>. This leads to this instance:</p>
+<div class="sourceCode" id="cb3" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">Num</span> a <span class="ot">=&gt;</span> <span class="dt">Num</span> (<span class="dt">Graph</span> a) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    fromInteger <span class="fu">=</span> <span class="dt">Vertex</span> <span class="fu">.</span> fromInteger</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">    (<span class="fu">+</span>)         <span class="fu">=</span> <span class="dt">Overlay</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">    (<span class="fu">*</span>)         <span class="fu">=</span> <span class="dt">Connect</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    signum      <span class="fu">=</span> const <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    abs         <span class="fu">=</span> id</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">    negate      <span class="fu">=</span> id</a></code></pre></div>
+<p>This means that, in a context of a <code class="verbated">Graph</code>, we have <code class="verbated">Vertex 1 == 1</code>, which is quite useful!</p>
+<p>Do you see why alga is an implementation of an <em>algebra</em> of graphs? There is a lot of maths here! No please don’t run away like you have seen a zombie in a graveyard! Don’t worry, this is not-so-difficult math.</p>
+<h4 id="note">Note</h4>
+<p>We will use the <code class="verbated">(+)</code> and <code class="verbated">(*)</code> notation, but these laws are true even when dealing for any graphs.</p>
+<h2 id="overlay">Overlay</h2>
+<p>As usual, <code class="verbated">(+)</code> is <em>associative</em> (the order in which you are choosing to overlay graphs is not important):</p>
+<div class="sourceCode" id="cb4" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1">(<span class="dv">1</span> <span class="fu">+</span> <span class="dv">2</span>) <span class="fu">+</span> <span class="dv">3</span> <span class="fu">==</span> <span class="dv">1</span> <span class="fu">+</span> (<span class="dv">2</span> <span class="fu">+</span> <span class="dv">3</span>)</a></code></pre></div>
+<p><code class="verbated">(+)</code> is also <em>commutative</em> (overlaying <span class="math inline"><em>a</em></span> and <span class="math inline"><em>b</em></span> is the same as overlaying <span class="math inline"><em>b</em></span> and <span class="math inline"><em>a</em></span>):</p>
+<div class="sourceCode" id="cb5" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="dv">1</span> <span class="fu">+</span> <span class="dv">2</span> <span class="fu">==</span> <span class="dv">2</span> <span class="fu">+</span> <span class="dv">1</span></a></code></pre></div>
+<p><code class="verbated">(+)</code> has <code class="verbated">Empty</code> as a neutral element (overlaying an Empty graph to another graph is this graph):</p>
+<div class="sourceCode" id="cb6" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="dv">1</span> <span class="fu">+</span> <span class="dt">Empty</span> <span class="fu">==</span> <span class="dv">1</span> <span class="fu">==</span> <span class="dt">Empty</span> <span class="fu">+</span> <span class="dv">1</span></a></code></pre></div>
+<p><code class="verbated">(+)</code> is <em>idempotent</em> (overlaying a graph with itself is the same graph):</p>
+<div class="sourceCode" id="cb7" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="dv">1</span> <span class="fu">+</span> <span class="dv">1</span> <span class="fu">==</span> <span class="dv">1</span></a></code></pre></div>
+<h2 id="connect">Connect</h2>
+<p>As usual, <code class="verbated">(*)</code> is <em>associative</em> (the order in which you are choosing to connect graphs is not important):</p>
+<div class="sourceCode" id="cb8" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1">(<span class="dv">1</span> <span class="fu">*</span> <span class="dv">2</span>) <span class="fu">*</span> <span class="dv">3</span> <span class="fu">==</span> <span class="dv">1</span> <span class="fu">*</span> (<span class="dv">2</span> <span class="fu">*</span> <span class="dv">3</span>)</a></code></pre></div>
+<p><code class="verbated">(*)</code> is NOT <em>commutative</em> (drawing an edge from vertex 1 to vertex 2 is not the same as drawing an edge from vertex 2 to vertex 1):</p>
+<div class="sourceCode" id="cb9" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="dv">1</span> <span class="fu">*</span> <span class="dv">2</span> <span class="fu">/=</span> <span class="dv">2</span> <span class="fu">*</span> <span class="dv">1</span></a></code></pre></div>
+<p><code class="verbated">(*)</code> it has <code class="verbated">Empty</code> as a neutral element (connecting an Empty graph to another graph is this graph):</p>
+<div class="sourceCode" id="cb10" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="dv">1</span> <span class="fu">*</span> <span class="dt">Empty</span> <span class="fu">==</span> <span class="dv">1</span> <span class="fu">==</span> <span class="dt">Empty</span> <span class="fu">*</span> <span class="dv">1</span></a></code></pre></div>
+<p><code class="verbated">(*)</code> can saturate (connecting three times the same graph is the same as connecting two times the same graph)</p>
+<div class="sourceCode" id="cb11" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="dv">1</span> <span class="fu">*</span> <span class="dv">1</span> <span class="fu">*</span> <span class="dv">1</span> <span class="fu">==</span> <span class="dv">1</span> <span class="fu">*</span> <span class="dv">1</span></a></code></pre></div>
+<p>Why <code class="verbated">(*)</code> is not <em>idempotent</em>? Because connecting a vertex with himself allow to create a <em>loop</em>:</p>
+<p><img src="figspng/saturate.png" class="big" alt="image" /></p>
+<h2 id="the-two-together">The two together</h2>
+<p>Do you remind when you have discovered that you can mix <span class="math inline">+</span> and <span class="math inline">*</span> in the same equation? This is the same thing here!</p>
+<div class="sourceCode" id="cb12" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="dv">1</span> <span class="fu">*</span> (<span class="dv">2</span> <span class="fu">+</span> <span class="dv">3</span>) <span class="fu">==</span> <span class="dv">1</span> <span class="fu">*</span> <span class="dv">2</span> <span class="fu">+</span> <span class="dv">1</span> <span class="fu">*</span> <span class="dv">3</span></a></code></pre></div>
+<p>Here, connecting the single vertex 1 to both 2 and 3 can be done of two <em>equivalent</em> ways:</p>
+<ul>
+<li><p>either you are connecting 1 to 2 and 3 “overlayed“.</p></li>
+<li><p>or you are overlaying the two edges <code class="verbated">(1,2)</code> and <code class="verbated">(1,3)</code></p></li>
+</ul>
+<p>Whew, this is done we can make a step forward.</p>
+<h2 id="making-graphs">Making graphs</h2>
+<p>I haven’t answered on question yet:</p>
+<blockquote>
+<p>Is the definition usable? Can we represent every graph in alga’s representation ?</p>
+</blockquote>
+<p>Let’s try to answer this <em>important</em> question. As said, graphs are (almost all the time) defined as a pair <span class="math inline"><em>V</em></span> of vertices and <span class="math inline"><em>E</em> ⊆ <em>V</em> × <em>V</em></span> a set of edges. So to prove that we can represents any graph, we need to define a function <code class="verbated">create :: [a] -&gt; [(a,a)] -&gt; Graph a</code> that create a graph from this standard representation.</p>
+<p>Ok, let’s forget about the edges, we are first going to make <code class="verbated">vertices :: [a] -&gt; Graph a</code> that transform a list of vertices into a <code class="verbated">Graph</code> containing all the single vertices. It looks like we are going to <code class="verbated">fold</code> a list</p>
+<div class="sourceCode" id="cb13" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="ot">vertices ::</span> [a] <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">vertices <span class="fu">=</span> foldr (\v g <span class="ot">-&gt;</span> <span class="dt">Overlay</span> (<span class="dt">Vertex</span> v) g) <span class="dt">Empty</span></a></code></pre></div>
+<p>Any idea how to do <code class="verbated">edges :: [(a,a)] -&gt; Graph a</code>? The same way, obviously:</p>
+<div class="sourceCode" id="cb14" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="ot">edges ::</span> [(a,a)] <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">edges <span class="fu">=</span> foldr</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">  (\(x,y) g <span class="ot">-&gt;</span> <span class="dt">Overlay</span> (<span class="dt">Connect</span> (<span class="dt">Vertex</span> x) (<span class="dt">Vertex</span> y)) g)</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4">  <span class="dt">Empty</span></a></code></pre></div>
+<p>And so, what can be our <code class="verbated">create :: [a] -&gt; [(a,a)] -&gt; Graph a</code>? Simply:</p>
+<div class="sourceCode" id="cb15" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="ot">create ::</span> [a] <span class="ot">-&gt;</span> [(a,a)] <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb15-2" data-line-number="2">create v e <span class="fu">=</span> <span class="dt">Overlay</span> (vertices v) (edges e)</a></code></pre></div>
+<p>So we have defined the desired function, thus we can safely use this definition!</p>
+<h1 id="the-benefits-of-the-definition">The benefits of the definition</h1>
+<h2 id="foldg">foldg</h2>
+<p>On of the very advantage given by this representation is the ability to define the <code class="verbated">foldg</code> function, a kind of adapted <code class="verbated">fold</code> for graph:</p>
+<div class="sourceCode" id="cb16" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="ot">foldg ::</span> b <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b)</a>
+<a class="sourceLine" id="cb16-2" data-line-number="2">      <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> b</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">foldg e v o c <span class="fu">=</span> go</a>
+<a class="sourceLine" id="cb16-4" data-line-number="4">    <span class="kw">where</span></a>
+<a class="sourceLine" id="cb16-5" data-line-number="5">    go <span class="dt">Empty</span>         <span class="fu">=</span> e</a>
+<a class="sourceLine" id="cb16-6" data-line-number="6">    go (<span class="dt">Vertex</span>  x  ) <span class="fu">=</span> v x</a>
+<a class="sourceLine" id="cb16-7" data-line-number="7">    go (<span class="dt">Overlay</span> x y) <span class="fu">=</span> o (go x) (go y)</a>
+<a class="sourceLine" id="cb16-8" data-line-number="8">    go (<span class="dt">Connect</span> x y) <span class="fu">=</span> c (go x) (go y)</a></code></pre></div>
+<p>In other words, the <code class="verbated">foldg</code> function take a base case for <code class="verbated">Empty</code> graphs, something to transform a <code class="verbated">Vertex</code>, and combining functions when we encounter <code class="verbated">Overlay</code> or <code class="verbated">Connect</code>.</p>
+<h2 id="transpose">transpose</h2>
+<p>We have a wonderful graph and we want to <code class="verbated">transpose</code> it. Transposing an oriented graph consist in inverting the orientation of all edges. Using <code class="verbated">foldg</code>, this is a piece of cake:</p>
+<div class="sourceCode" id="cb17" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="ot">transpose ::</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2">transpose <span class="fu">=</span> foldg <span class="dt">Empty</span> <span class="dt">Vertex</span> <span class="dt">Overlay</span> (flip <span class="dt">Connect</span>)</a></code></pre></div>
+<h2 id="induce">induce</h2>
+<p>Still not convinced? Let’s try to build an induced sub-graph. An induced sub-graph is a sub-graph that “forget“ about some vertices and all edges to and from these vertices.</p>
+<p>So, we are going to code the <code class="verbated">induce :: (a -&gt; bool) -&gt; Graph a -&gt; Graph a</code> function. We will use <code class="verbated">foldg</code> of course</p>
+<p>What is the base case? Do we need to change an <code class="verbated">Empty</code> graph? No of course:</p>
+<div class="sourceCode" id="cb18" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="ot">induce ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb18-2" data-line-number="2">induce predicate <span class="fu">=</span> foldg</a>
+<a class="sourceLine" id="cb18-3" data-line-number="3">  <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb18-4" data-line-number="4">  undefined</a>
+<a class="sourceLine" id="cb18-5" data-line-number="5">  undefined</a>
+<a class="sourceLine" id="cb18-6" data-line-number="6">  undefined</a></code></pre></div>
+<p>Then if we encounter a vertex, we need to verify if it satisfy the predicate. If it does not, we will simply replace it…Let’s say by the empty graph!</p>
+<div class="sourceCode" id="cb19" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="ot">induce ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">induce predicate <span class="fu">=</span> foldg</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">  <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb19-4" data-line-number="4">  (\x <span class="ot">-&gt;</span> <span class="kw">if</span> predicate x <span class="kw">then</span> <span class="dt">Vertex</span> x <span class="kw">else</span> <span class="dt">Empty</span>)</a>
+<a class="sourceLine" id="cb19-5" data-line-number="5">  undefined</a>
+<a class="sourceLine" id="cb19-6" data-line-number="6">  undefined</a></code></pre></div>
+<p>And finally do we need to touch connection between base graphs? Not at all! Remember, <code class="verbated">Empty</code> is the neutral element of <em>both</em> <code class="verbated">Connect</code> and <code class="verbated">Overlay</code>. So we can leave our empty graphs inside the structure without problem (don’t worry, the real implementation get rid of these empty leaves). So we come to:</p>
+<div class="sourceCode" id="cb20" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="ot">induce ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb20-2" data-line-number="2">induce predicate <span class="fu">=</span> foldg</a>
+<a class="sourceLine" id="cb20-3" data-line-number="3">  <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb20-4" data-line-number="4">  (\x <span class="ot">-&gt;</span> <span class="kw">if</span> predicate x <span class="kw">then</span> <span class="dt">Vertex</span> x <span class="kw">else</span> <span class="dt">Empty</span>)</a>
+<a class="sourceLine" id="cb20-5" data-line-number="5">  <span class="dt">Overlay</span></a>
+<a class="sourceLine" id="cb20-6" data-line-number="6">  <span class="dt">Connect</span></a></code></pre></div>
+<p>So simple, isn’t it?</p>
+<p>This even allow us to define:</p>
+<div class="sourceCode" id="cb21" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="ot">removeVertex ::</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb21-2" data-line-number="2">removeVertex x <span class="fu">=</span> induce (<span class="fu">/=</span>x)</a></code></pre></div>
+<h2 id="hasedge">hasEdge</h2>
+<p><code class="verbated">foldg</code> and <code class="verbated">induce</code> are so cool that a good part of the Alga API is made from them. For example, let’s take a look at the <code class="verbated">hasEdge</code> definition:</p>
+<div class="sourceCode" id="cb22" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="ot">hasEdge ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb22-2" data-line-number="2">hasEdge u v <span class="fu">=</span></a>
+<a class="sourceLine" id="cb22-3" data-line-number="3">    (<span class="dt">Connect</span> (<span class="dt">Vertex</span> u) (<span class="dt">Vertex</span> v) <span class="ot">`isSubgraphOf`</span>) <span class="fu">.</span></a>
+<a class="sourceLine" id="cb22-4" data-line-number="4">    induce (<span class="ot">`elem`</span> [u, v])</a></code></pre></div>
+<p>To check if a graph contains an edge from <span class="math inline"><em>x</em></span> to <span class="math inline"><em>y</em></span>, you can remove every vertices different of <span class="math inline"><em>x</em></span> and <span class="math inline"><em>y</em></span>, and then check if the edge <em>alone</em> is a sub-graph of the induced sub-graph. Note that <code class="verbated">hasEdge</code> is requiring an <code class="verbated">Ord</code> instance because <code class="verbated">isSubgraphOf</code> is requiring it.</p>
+<h1 id="the-problems-of-the-definition">The problems of the definition</h1>
+<h2 id="equality">Equality</h2>
+<p>There is no canonical way to define a graph in alga. For example:</p>
+<div class="sourceCode" id="cb23" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="dt">Overlay</span> (<span class="dt">Vertex</span> <span class="dv">1</span>) (<span class="dt">Vertex</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="fu">==</span> <span class="dt">Overlay</span> (<span class="dt">Vertex</span> <span class="dv">2</span>) (<span class="dt">Vertex</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb23-3" data-line-number="3"><span class="fu">==</span> <span class="dt">Connect</span> <span class="dt">Empty</span> (<span class="dt">Overlay</span> (<span class="dt">Vertex</span> <span class="dv">1</span>) (<span class="dt">Vertex</span> <span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb23-4" data-line-number="4"><span class="fu">==</span> <span class="dt">Overlay</span></a>
+<a class="sourceLine" id="cb23-5" data-line-number="5">  (<span class="dt">Connect</span> (<span class="dt">Vertex</span> <span class="dv">1</span>) <span class="dt">Empty</span>)</a>
+<a class="sourceLine" id="cb23-6" data-line-number="6">  (<span class="dt">Connect</span> <span class="dt">Empty</span> (<span class="dt">Vertex</span> <span class="dv">2</span>))</a></code></pre></div>
+<p>Fortunately, you don’t have to bother with the internal definition since the <code class="verbated">Eq</code> instance (which provide <code class="verbated">(==)</code>) take care of this problem for you.</p>
+<p>Alga is also providing <code class="verbated">(===)</code> which denote <em>structural</em> equality, and thus</p>
+<div class="sourceCode" id="cb24" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb24-1" data-line-number="1"><span class="dt">Overlay</span> (<span class="dt">Vertex</span> <span class="dv">1</span>) (<span class="dt">Vertex</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb24-2" data-line-number="2"><span class="fu">===</span></a>
+<a class="sourceLine" id="cb24-3" data-line-number="3"><span class="dt">Overlay</span> (<span class="dt">Vertex</span> <span class="dv">2</span>) (<span class="dt">Vertex</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb24-4" data-line-number="4"><span class="fu">==</span> <span class="dt">False</span></a></code></pre></div>
+<h2 id="take-care-when-defining-functions">Take care when defining functions</h2>
+<p>Here is a nasty function that you can define:</p>
+<div class="sourceCode" id="cb25" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb25-1" data-line-number="1">close <span class="fu">:</span> <span class="dt">Graph</span> <span class="dt">A</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">A</span></a>
+<a class="sourceLine" id="cb25-2" data-line-number="2">close <span class="dt">Empty</span>         <span class="fu">=</span> <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb25-3" data-line-number="3">close (<span class="dt">Vertex</span> x)    <span class="fu">=</span> <span class="dt">Vertex</span> x</a>
+<a class="sourceLine" id="cb25-4" data-line-number="4">close (<span class="dt">Overlay</span> x y) <span class="fu">=</span> <span class="dt">Connect</span> x y</a>
+<a class="sourceLine" id="cb25-5" data-line-number="5">close (<span class="dt">Connect</span> x y) <span class="fu">=</span> <span class="dt">Connect</span> x y</a></code></pre></div>
+<p>Do you see the problem?</p>
+<div class="sourceCode" id="cb26" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="fu">&gt;&gt;&gt;</span> <span class="kw">let</span> x <span class="fu">=</span> <span class="dt">Vertex</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb26-2" data-line-number="2"><span class="fu">&gt;&gt;&gt;</span> <span class="kw">let</span> y <span class="fu">=</span> <span class="dt">Overlay</span> (<span class="dt">Vertex</span> <span class="dv">0</span>) (<span class="dt">Vertex</span> <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb26-3" data-line-number="3"><span class="fu">&gt;&gt;&gt;</span> x <span class="fu">==</span> y</a>
+<a class="sourceLine" id="cb26-4" data-line-number="4"><span class="dt">True</span></a>
+<a class="sourceLine" id="cb26-5" data-line-number="5"><span class="fu">&gt;&gt;&gt;</span> print (close x)</a>
+<a class="sourceLine" id="cb26-6" data-line-number="6"><span class="dt">Vertex</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb26-7" data-line-number="7"><span class="fu">&gt;&gt;&gt;</span> print (close y)</a>
+<a class="sourceLine" id="cb26-8" data-line-number="8">(<span class="dt">Vertex</span> <span class="dv">0</span>) <span class="fu">*</span> (<span class="dt">Vertex</span> <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb26-9" data-line-number="9"><span class="fu">&gt;&gt;&gt;</span> close x <span class="fu">==</span> close y</a>
+<a class="sourceLine" id="cb26-10" data-line-number="10"><span class="dt">False</span></a></code></pre></div>
+<p>For the moment, one can mess the internal structure, and the equality loose its meaning (ie <span class="math inline">∀(<em>f</em> : <em>G</em><em>r</em><em>a</em><em>p</em><em>h</em> <em>A</em> → <em>G</em><em>r</em><em>a</em><em>p</em><em>h</em> <em>B</em>) : <em>g</em> = <em>y</em> ⟹ <em>f</em> <em>g</em> = <em>f</em> <em>y</em></span> does NOT hold ).</p>
+<h1 id="useful-instances">Useful instances</h1>
+<p>Alga’s graphs are instance of some classical Haskell classes:</p>
+<h2 id="eq-show">Eq, Show</h2>
+<p>Of course, you have Graph equality, and you can show a Graph. Alga can also export to the <em>DOT file format</em> through the <code class="verbated">Algebra.Graph.Export.Dot</code> module.</p>
+<h2 id="functor">Functor</h2>
+<p>Not so surprisingly, <code class="verbated">Graph</code> is an instance of <code class="verbated">Functor</code>:</p>
+<div class="sourceCode" id="cb27" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">Graph</span> a) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb27-2" data-line-number="2">  fmap _ <span class="dt">Empty</span> <span class="fu">=</span> <span class="dt">Empty</span></a>
+<a class="sourceLine" id="cb27-3" data-line-number="3">  fmap f (<span class="dt">Vertex</span> a) <span class="fu">=</span> <span class="dt">Vertex</span> <span class="fu">$</span> f a</a>
+<a class="sourceLine" id="cb27-4" data-line-number="4">  fmap f (<span class="dt">Overlay</span> a b) <span class="fu">=</span> <span class="dt">Overlay</span> (fmap f a) (fmap f b)</a>
+<a class="sourceLine" id="cb27-5" data-line-number="5">  fmap f (<span class="dt">Connect</span> a b) <span class="fu">=</span> <span class="dt">Connect</span> (fmap f a) (fmap f b)</a></code></pre></div>
+<p>This means that if you have something to transform a <code class="verbated">a</code> in a <code class="verbated">b</code> then you can transform a <code class="verbated">Graph a</code> into a <code class="verbated">Graph b</code>. For example:</p>
+<p><img src="figspng/fmap.png" class="big" alt="image" /></p>
+<p>If you want to test it, the first graph in alga’s representation is: <code class="verbated">1 * (2 + 5) * 0</code><br />
+<br />
+Alert! Alert! Haskeller’s alarms are ringing! If there is a <code class="verbated">Functor</code> instance, is there a <code class="verbated">Monad</code> one?</p>
+<h2 id="monad">Monad</h2>
+<p><code class="verbated">Graph</code> are indeed a <code class="verbated">Monad</code> instance:</p>
+<div class="sourceCode" id="cb28" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">Monad</span> (<span class="dt">Graph</span> a) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb28-2" data-line-number="2">  return  <span class="fu">=</span> <span class="dt">Vertex</span></a>
+<a class="sourceLine" id="cb28-3" data-line-number="3">  g <span class="fu">&gt;&gt;=</span> f <span class="fu">=</span> foldg <span class="dt">Empty</span> f <span class="dt">Connect</span> <span class="dt">Overlay</span> g</a></code></pre></div>
+<p>You can convert anything into a graph, simply by transforming it in a single vertex. Moreover, if you can produce a graph from a type <code class="verbated">a</code> then you can replace every vertex of a <code class="verbated">Graph a</code> with the result, transforming it into a <code class="verbated">Graph b</code>.</p>
+<p>For example, one can redefine the previously-viewed <code class="verbated">induce</code> as:</p>
+<div class="sourceCode" id="cb29" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="ot">induce ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Graph</span> a <span class="ot">-&gt;</span> <span class="dt">Graph</span> a</a>
+<a class="sourceLine" id="cb29-2" data-line-number="2">induce predicate g</a>
+<a class="sourceLine" id="cb29-3" data-line-number="3">  <span class="fu">=</span> g <span class="fu">&gt;&gt;=</span> (\x <span class="ot">-&gt;</span> <span class="kw">if</span> predicate x <span class="kw">then</span> <span class="dt">Vertex</span> x <span class="kw">else</span> <span class="dt">Empty</span>)</a></code></pre></div>
+<h2 id="foldable">Foldable</h2>
+<p>We can in fact define a <code class="verbated">Foldable</code> instance for <code class="verbated">Graph</code>.</p>
+<p>This means that you have access to “lists-like“ functions (like <code class="verbated">elem</code>, <code class="verbated">null</code>). These functions are useful but <em>not</em> optimized.</p>
+<h3 id="tolist">toList</h3>
+<p>It provide also a <code class="verbated">toList</code> function, but WARNING, this is not what you think! It literally transform a graph into a list, so if you had a self-loop or any time two vertices, then you will have two times the same vertex.</p>
+<p>In fact, you can use the <code class="verbated">Foldable</code> instance by thinking a graph like a list. For example,</p>
+<p><img src="figspng/foldable.png" alt="image" /></p>
+<div class="sourceCode" id="cb30" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" data-line-number="1">toList ((<span class="dv">0</span> <span class="fu">+</span> <span class="dv">1</span>) <span class="fu">+</span> ((<span class="dv">0</span><span class="fu">*</span><span class="dv">2</span>) <span class="fu">+</span> <span class="dv">3</span>)) <span class="fu">==</span> [<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">2</span>,<span class="dv">3</span>]</a></code></pre></div>
+<p>Alga is providing a faster <code class="verbated">toList</code> (called <code class="verbated">vertexList</code>) based on <code class="verbated">vertexSet</code> and thus, requiring an <code class="verbated">Ord</code> instance on the vertices. Moreover, <code class="verbated">vertexList</code> give vertices in <em>ascending order</em>.<br />
+Keep this in mind:</p>
+<div class="sourceCode" id="cb31" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" data-line-number="1">toList <span class="fu">/=</span> vertexList</a>
+<a class="sourceLine" id="cb31-2" data-line-number="2">sort <span class="fu">.</span> nub <span class="fu">.</span> toList <span class="fu">==</span> vertexList</a></code></pre></div>
+<h2 id="traversable">Traversable</h2>
+<p>More than <code class="verbated">Foldable</code> you have a <code class="verbated">Traversable</code> instance for <code class="verbated">Graph</code>.</p>
+<p>Mainly, you can use <code class="verbated">sequence :: Monad m =&gt; t (m a) -&gt; m (t a)</code>. Quickly, you can “strip-out“ a monadic effects. For example, if you have a <code class="verbated">Graph (Maybe a)</code> with leaves set as <code class="verbated">Maybe a</code>, you can have a <code class="verbated">Maybe (Graph a)</code>, set to <code class="verbated">Nothing</code> is there was at least <code class="verbated">Nothing</code> leaf, and <code class="verbated">Just gr</code> if there was <em>only</em> <code class="verbated">Just</code> leaves.</p>
+<h1 id="an-example-a-social-network">An example: A social network</h1>
+<h2 id="the-goal">The goal</h2>
+<p>Ok, now we are wanting to build something real with all of this. Let’s say a social network: one can represent them easily through graphs. The marketing team analysed the market, and decided to make something “à la Twitter“. The vertices will be users, and an edge from <span class="math inline"><em>x</em></span> to <span class="math inline"><em>y</em></span> will denote that <span class="math inline"><em>x</em></span> is following <span class="math inline"><em>y</em></span>.</p>
+<h2 id="handlerequest">handleRequest</h2>
+<p>The staff meeting has chose you to build the <code class="verbated">handleRequest</code> function:</p>
+<div class="sourceCode" id="cb32" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" data-line-number="1"><span class="kw">type</span> <span class="dt">User</span> <span class="fu">=</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb32-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb32-3" data-line-number="3"><span class="kw">data</span> <span class="dt">RequestM</span> <span class="fu">=</span> <span class="dt">AddUser</span> <span class="dt">User</span></a>
+<a class="sourceLine" id="cb32-4" data-line-number="4">              <span class="fu">|</span> <span class="dt">RemoveUser</span> <span class="dt">User</span></a>
+<a class="sourceLine" id="cb32-5" data-line-number="5">              <span class="fu">|</span> <span class="dt">ConnectU</span> <span class="dt">User</span> <span class="dt">User</span></a>
+<a class="sourceLine" id="cb32-6" data-line-number="6">              <span class="fu">|</span> <span class="dt">DisconnectU</span> <span class="dt">User</span> <span class="dt">User</span></a>
+<a class="sourceLine" id="cb32-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb32-8" data-line-number="8"><span class="ot">handleRequestM ::</span> <span class="dt">RequestM</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span></a></code></pre></div>
+<p>Ok this is now a pretty simple job and the implementation is straightforward:</p>
+<div class="sourceCode" id="cb33" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="ot">handleRequestM ::</span> <span class="dt">RequestM</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span></a>
+<a class="sourceLine" id="cb33-2" data-line-number="2">handleRequestM (<span class="dt">AddUser</span> a) <span class="fu">=</span> <span class="dt">Overlay</span> (<span class="dt">Vertex</span> a)</a>
+<a class="sourceLine" id="cb33-3" data-line-number="3">handleRequestM (<span class="dt">RemoveUser</span> a) <span class="fu">=</span> removeVertex a</a>
+<a class="sourceLine" id="cb33-4" data-line-number="4">handleRequestM (<span class="dt">ConnectU</span> a b) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb33-5" data-line-number="5">    <span class="dt">Overlay</span> (<span class="dt">Connect</span> (<span class="dt">Vertex</span> a) (<span class="dt">Vertex</span> b))</a>
+<a class="sourceLine" id="cb33-6" data-line-number="6">handleRequestM (<span class="dt">DisconnectU</span> a b) <span class="fu">=</span> removeEdge a b</a></code></pre></div>
+<h2 id="space-is-important">Space is important</h2>
+<p>Your company is looking to have many users, so maybe the <code class="verbated">ConnectU</code> is not very wise. In fact, adding a <code class="verbated">(Connect (Vertex a) (Vertex b))</code> is not very alga-friendly. If <code class="verbated">a</code> is connected to 100 people, then <code class="verbated">Vertex a</code> will be 100 times in the representation!<br />
+On the advice of your superior, you can change it to:</p>
+<div class="sourceCode" id="cb34" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" data-line-number="1">handleRequestM (<span class="dt">ConnectU</span> a b) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb34-2" data-line-number="2">  (<span class="fu">&gt;&gt;=</span>) (\x <span class="ot">-&gt;</span> <span class="kw">if</span> x <span class="fu">==</span> a</a>
+<a class="sourceLine" id="cb34-3" data-line-number="3">    <span class="kw">then</span> <span class="dt">Connect</span> (<span class="dt">Vertex</span> x) (<span class="dt">Vertex</span> b)</a>
+<a class="sourceLine" id="cb34-4" data-line-number="4">    <span class="kw">else</span> <span class="dt">Vertex</span> x )</a></code></pre></div>
+<p>The modified function will take longer to add a connection (<code class="verbated">foldg</code> has a complexity of <span class="math inline"><em>O</em>(<em>n</em>)</span>), but you will ensure that your graph will not grow too fast (if and only if there is not multiple <code class="verbated">Vertex a</code> hidden in the representation).</p>
+<h2 id="inspection">Inspection</h2>
+<p>Viewing that you implemented your function very quickly, you are being asked to help one of your co-workers on his function. He was working about the <code class="verbated">getFollowing :: User -&gt; Graph User -&gt; [User]</code> function.</p>
+<p>One possible way is to use the <code class="verbated">edgeList :: Ord a =&gt; Graph a -&gt; [(a,a)]</code> function.</p>
+<div class="sourceCode" id="cb35" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" data-line-number="1"><span class="ot">getFollowing ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> [<span class="dt">User</span>]</a>
+<a class="sourceLine" id="cb35-2" data-line-number="2">getFollowing u <span class="fu">=</span></a>
+<a class="sourceLine" id="cb35-3" data-line-number="3">  map snd <span class="fu">.</span> filter (\(v,_) <span class="ot">-&gt;</span> u <span class="fu">==</span> v ) <span class="fu">.</span> edgeList</a></code></pre></div>
+<p>you can even implement blindly the <code class="verbated">getFollowers</code> function:</p>
+<div class="sourceCode" id="cb36" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb36-1" data-line-number="1"><span class="ot">getFollowers ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> [<span class="dt">User</span>]</a>
+<a class="sourceLine" id="cb36-2" data-line-number="2">getFollowers u <span class="fu">=</span></a>
+<a class="sourceLine" id="cb36-3" data-line-number="3">  map fst <span class="fu">.</span> filter (\(_,v) <span class="ot">-&gt;</span> u <span class="fu">==</span> v ) <span class="fu">.</span> edgeList</a></code></pre></div>
+<h2 id="going-io">Going IO</h2>
+<p>Ok, pure <code class="verbated">Graph</code> inspection is cool, but how do inspect with IO? Your superior want to know from time to time how many users are connected. He has wrote <code class="verbated">isConnected</code> <code class="verbated">:: User -&gt; IO Bool</code>, and he is asking you to write <code class="verbated">numberOfConnected</code> <code class="verbated">:: Graph User -&gt; IO Int</code>. Using <code class="verbated">traverse</code> on the list of the vertices, you quickly answer:</p>
+<div class="sourceCode" id="cb37" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb37-1" data-line-number="1"><span class="ot">numberOfConnected ::</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb37-2" data-line-number="2">numberOfConnected <span class="fu">=</span> fmap (length <span class="fu">.</span> filter id) <span class="fu">.</span></a>
+<a class="sourceLine" id="cb37-3" data-line-number="3">  traverse isConnected <span class="fu">.</span></a>
+<a class="sourceLine" id="cb37-4" data-line-number="4">  vertexList</a></code></pre></div>
+<p>Note that this version is easy to understand and to write, but nor very efficient. One can write a more efficient one using <code class="verbated">foldg</code> and <code class="verbated">IntSet</code>:</p>
+<div class="sourceCode" id="cb38" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb38-1" data-line-number="1"><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.IntSet</span> <span class="kw">as</span> <span class="dt">Set</span></a>
+<a class="sourceLine" id="cb38-2" data-line-number="2"><span class="kw">import</span> <span class="dt">Control.Applicative</span> (liftA2)</a>
+<a class="sourceLine" id="cb38-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb38-4" data-line-number="4"><span class="ot">numberOfConnected ::</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb38-5" data-line-number="5">numberOfConnected <span class="fu">=</span> fmap Set.size <span class="fu">.</span> foldg</a>
+<a class="sourceLine" id="cb38-6" data-line-number="6">  (return Set.empty)</a>
+<a class="sourceLine" id="cb38-7" data-line-number="7">  (\x <span class="ot">-&gt;</span> fmap</a>
+<a class="sourceLine" id="cb38-8" data-line-number="8">    (\y <span class="ot">-&gt;</span> <span class="kw">if</span> y</a>
+<a class="sourceLine" id="cb38-9" data-line-number="9">       <span class="kw">then</span> Set.singleton x</a>
+<a class="sourceLine" id="cb38-10" data-line-number="10">       <span class="kw">else</span> Set.empty</a>
+<a class="sourceLine" id="cb38-11" data-line-number="11">    )</a>
+<a class="sourceLine" id="cb38-12" data-line-number="12">    (isConnected x)</a>
+<a class="sourceLine" id="cb38-13" data-line-number="13">  )</a>
+<a class="sourceLine" id="cb38-14" data-line-number="14">  (liftA2 Set.union)</a>
+<a class="sourceLine" id="cb38-15" data-line-number="15">  (liftA2 Set.union)</a></code></pre></div>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=hs&skin=desert"></script>
+</body>
+</html>
