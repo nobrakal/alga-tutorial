@@ -29,7 +29,11 @@ pre {
   padding: 0.5%;
 }
 
+.haskell {
+  background-color: #e6e6e6;
+}
+
 .verbated {
-  background-color: lightgrey;
+  background-color: #e6e6e6;
   padding: 0.1%;
 }
