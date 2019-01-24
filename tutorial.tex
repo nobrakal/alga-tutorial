@@ -346,6 +346,24 @@ Alga's graphs are instance of some classical Haskell classes:
 \subsection{Eq, Show}
 Of course, you have Graph equality, and you can show a Graph. Alga can also export to the \emph{DOT file format} through the \verb|Algebra.Graph.Export.Dot| module.
 
+\subsection{Ord}
+Less trivially, there is a total order defined on graphs and implemented in alga. It use the size-lexicographic/ comparison:
+\begin{itemize}
+	\item Compare the number of vertices. In case of a tie, continue.
+	\item Compare the sets of vertices. In case of a tie, continue.
+	\item Compare the number of edges. In case of a tie, continue.
+	\item Compare the sets of edges.
+\end{itemize}
+
+So first, it is indeed and order (this relation is transitive, reflexive and anti-symmetric) and it is \emph{total} (you can compare any graphs). The second is that this order is, in some way, compatible with graphs operations:
+
+\begin{itemize}
+	\item $\forall g$: \verb|(empty <= x) == True|
+	\item If $x$ is a sub-graph of $y$, then \verb|(x <= y) == True|
+	\item $\forall x, y$: \verb|(x <= x+y) == True|
+	\item $\forall x, y$: \verb|(x+y <= x*y) == True|
+\end{itemize}
+
 \subsection{Functor}
 Not so surprisingly, \verb|Graph| is an instance of \verb|Functor|:
 \begin{lstlisting}[language=Haskell, frame=single]

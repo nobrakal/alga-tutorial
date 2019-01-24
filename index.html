@@ -254,6 +254,21 @@ If you encounter any bug (I hope you will not), please open an issue at <a href=
 <p>Alga’s graphs are instance of some classical Haskell classes:</p>
 <h2 id="eq-show">Eq, Show</h2>
 <p>Of course, you have Graph equality, and you can show a Graph. Alga can also export to the <em>DOT file format</em> through the <code class="verbated">Algebra.Graph.Export.Dot</code> module.</p>
+<h2 id="ord">Ord</h2>
+<p>Less trivially, there is a total order defined on graphs and implemented in alga. It use the size-lexicographic/ comparison:</p>
+<ul>
+<li><p>Compare the number of vertices. In case of a tie, continue.</p></li>
+<li><p>Compare the sets of vertices. In case of a tie, continue.</p></li>
+<li><p>Compare the number of edges. In case of a tie, continue.</p></li>
+<li><p>Compare the sets of edges.</p></li>
+</ul>
+<p>So first, it is indeed and order (this relation is transitive, reflexive and anti-symmetric) and it is <em>total</em> (you can compare any graphs). The second is that this order is, in some way, compatible with graphs operations:</p>
+<ul>
+<li><p><span class="math inline">∀<em>g</em></span>: <code class="verbated">(empty &lt;= x) == True</code></p></li>
+<li><p>If <span class="math inline"><em>x</em></span> is a sub-graph of <span class="math inline"><em>y</em></span>, then <code class="verbated">(x &lt;= y) == True</code></p></li>
+<li><p><span class="math inline">∀<em>x</em>, <em>y</em></span>: <code class="verbated">(x &lt;= x+y) == True</code></p></li>
+<li><p><span class="math inline">∀<em>x</em>, <em>y</em></span>: <code class="verbated">(x+y &lt;= x*y) == True</code></p></li>
+</ul>
 <h2 id="functor">Functor</h2>
 <p>Not so surprisingly, <code class="verbated">Graph</code> is an instance of <code class="verbated">Functor</code>:</p>
 <div class="sourceCode" id="cb27" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">Graph</span> a) <span class="kw">where</span></a>
