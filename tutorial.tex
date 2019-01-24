@@ -385,36 +385,9 @@ induce predicate g
   = g >>= (\x -> if predicate x then Vertex x else Empty)
 \end{lstlisting}
 
-\subsection{Foldable}
-We can in fact define a \verb|Foldable| instance for \verb|Graph|.
-
-This means that you have access to ``lists-like`` functions (like \verb|elem|, \verb|null|). These functions are useful but \emph{not} optimized.
-
-\subsubsection{toList}
-It provide also a \verb|toList| function, but WARNING, this is not what you think! It literally transform a graph into a list. If you have a self-loop or any time two vertices, then you will have two times the same vertex.
-
-You can use the \verb|Foldable| instance by thinking a graph like a list. For example,
-
-\begin{center}
-	\includegraphics[scale=0.5]{figspng/foldable.png}
-\end{center}
-
-\begin{lstlisting}[language=Haskell, frame=single]
-toList ((0 + 1) + ((0*2) + 3)) == [0,1,0,2,3]
-\end{lstlisting}
-
-Alga is providing a faster \verb|toList| (called \verb|vertexList|) based on \verb|vertexSet| and thus requiring an \verb|Ord| instance on the vertices. Moreover, \verb|vertexList| give vertices in \emph{ascending order} and without duplicates.
-\\
-Keep this in mind:
-\begin{lstlisting}[language=Haskell, frame=single]
-toList /= vertexList
-sort . nub . toList == vertexList
-\end{lstlisting}
-
-\subsection{Traversable}
-More than \verb|Foldable| you have a \verb|Traversable| instance for \verb|Graph|.
-
-Mainly, you can use \verb|sequence :: Monad m => t (m a) -> m (t a)|. Quickly, you can ``strip-out`` a monadic effect. For example, if you have a \verb|Graph (Maybe a)| with leaves set as \verb|Maybe a|, you can have a \verb|Maybe (Graph a)|, set to \verb|Nothing| is there was at least \verb|Nothing| leaf, and \verb|Just gr| if there was \emph{only} \verb|Just| leaves.
+\subsection{Foldable and Traversable}
+\verb|Graph| can be a valid \verb|Foldable| and a valid \verb|Traversable| instance, but these are \emph{not} defined in the \verb|Algebra.Graph| module.\\
+The reason is that these instances are not compatible with the rest of the library. For example, \verb|vertexList g /= toList g| because a vertex can be multiple times in the structure.
 
 \section{An example: A social network}
 \subsection{The goal}
@@ -480,7 +453,7 @@ Ok, pure \verb|Graph| inspection is cool, but how do inspect with IO? Your super
 \begin{lstlisting}[language=Haskell, frame=single]
 numberOfConnected :: Graph User -> IO Int
 numberOfConnected = fmap (length . filter id) .
-  traverse isConnected .
+  foldg (pure Empty) (fmap Vertex . isConnected) (liftA2 Overlay) (liftA2 Connect) .
   vertexList
 \end{lstlisting}
 
