@@ -326,47 +326,38 @@ The reason is that these instances are not compatible with the rest of the libra
 <span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>handleRequestM (<span class="dt">ConnectU</span> a b) <span class="ot">=</span></span>
 <span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Overlay</span> (<span class="dt">Connect</span> (<span class="dt">Vertex</span> a) (<span class="dt">Vertex</span> b))</span>
 <span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>handleRequestM (<span class="dt">DisconnectU</span> a b) <span class="ot">=</span> removeEdge a b</span></code></pre></div>
-<h2 id="space-is-important">Space is important</h2>
-<p>Your company is looking to have many users, so maybe the <code class="verbated">ConnectU</code> is not very wise. In fact, adding a <code class="verbated">(Connect (Vertex a) (Vertex b))</code> is not very alga-friendly. If <code class="verbated">a</code> is connected to 100 people, then <code class="verbated">Vertex a</code> will be 100 times in the representation!<br />
-On the advice of your superior, you can change it to:</p>
-<div class="sourceCode" id="cb32" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>handleRequestM (<span class="dt">ConnectU</span> a b) g <span class="ot">=</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  g <span class="op">&gt;&gt;=</span> (\x <span class="ot">-&gt;</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> x <span class="op">==</span> a</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>     <span class="kw">then</span> <span class="dt">Connect</span> (<span class="dt">Vertex</span> x) (<span class="dt">Vertex</span> b)</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>     <span class="kw">else</span> <span class="dt">Vertex</span> x )</span></code></pre></div>
-<p>The modified function will take longer to add a connection (<code class="verbated">foldg</code> has a complexity of <span class="math inline"><em>O</em>(<em>n</em>)</span>), but you will ensure that your graph will not grow too fast (if and only if there is not multiple <code class="verbated">Vertex a</code> hidden in the representation).</p>
 <h2 id="inspection">Inspection</h2>
 <p>Viewing that you implemented your function very quickly, you are being asked to help one of your co-workers on his function. He was working about the <code class="verbated">getFollowing :: User -&gt; Graph User -&gt; [User]</code> function.</p>
 <p>One possible way is to use the <code class="verbated">edgeList :: Ord a =&gt; Graph a -&gt; [(a,a)]</code> function.</p>
-<div class="sourceCode" id="cb33" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">getFollowing ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> [<span class="dt">User</span>]</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>getFollowing u <span class="ot">=</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span> <span class="fu">snd</span> <span class="op">.</span> <span class="fu">filter</span> (\(v,_) <span class="ot">-&gt;</span> u <span class="op">==</span> v ) <span class="op">.</span> edgeList</span></code></pre></div>
+<div class="sourceCode" id="cb32" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ot">getFollowing ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> [<span class="dt">User</span>]</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>getFollowing u <span class="ot">=</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span> <span class="fu">snd</span> <span class="op">.</span> <span class="fu">filter</span> (\(v,_) <span class="ot">-&gt;</span> u <span class="op">==</span> v ) <span class="op">.</span> edgeList</span></code></pre></div>
 <p>you can even implement blindly the <code class="verbated">getFollowers</code> function:</p>
-<div class="sourceCode" id="cb34" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">getFollowers ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> [<span class="dt">User</span>]</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>getFollowers u <span class="ot">=</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span> <span class="fu">fst</span> <span class="op">.</span> <span class="fu">filter</span> (\(_,v) <span class="ot">-&gt;</span> u <span class="op">==</span> v ) <span class="op">.</span> edgeList</span></code></pre></div>
+<div class="sourceCode" id="cb33" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">getFollowers ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> [<span class="dt">User</span>]</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>getFollowers u <span class="ot">=</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span> <span class="fu">fst</span> <span class="op">.</span> <span class="fu">filter</span> (\(_,v) <span class="ot">-&gt;</span> u <span class="op">==</span> v ) <span class="op">.</span> edgeList</span></code></pre></div>
 <h2 id="going-io">Going IO</h2>
 <p>Ok, pure <code class="verbated">Graph</code> inspection is cool, but how do inspect with IO? Your superior want to know from time to time how many users are connected. He has wrote <code class="verbated">isConnected</code> <code class="verbated">:: User -&gt; IO Bool</code>, and he is asking you to write <code class="verbated">numberOfConnected</code> <code class="verbated">:: Graph User -&gt; IO Int</code>. Using <code class="verbated">traverse</code> on the list of the vertices, you quickly answer:</p>
-<div class="sourceCode" id="cb35" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfConnected ::</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>numberOfConnected <span class="ot">=</span> <span class="fu">fmap</span> (<span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> <span class="fu">id</span>) <span class="op">.</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  foldg (<span class="fu">pure</span> <span class="dt">Empty</span>) (<span class="fu">fmap</span> <span class="dt">Vertex</span> <span class="op">.</span> isConnected) (liftA2 <span class="dt">Overlay</span>) (liftA2 <span class="dt">Connect</span>) <span class="op">.</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  vertexList</span></code></pre></div>
+<div class="sourceCode" id="cb34" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfConnected ::</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>numberOfConnected <span class="ot">=</span> <span class="fu">fmap</span> (<span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> <span class="fu">id</span>) <span class="op">.</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  foldg (<span class="fu">pure</span> <span class="dt">Empty</span>) (<span class="fu">fmap</span> <span class="dt">Vertex</span> <span class="op">.</span> isConnected) (liftA2 <span class="dt">Overlay</span>) (liftA2 <span class="dt">Connect</span>) <span class="op">.</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  vertexList</span></code></pre></div>
 <p>Note that this version is easy to understand and to write, but nor very efficient. One can write a more efficient one using <code class="verbated">foldg</code> and <code class="verbated">IntSet</code>:</p>
-<div class="sourceCode" id="cb36" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.IntSet</span> <span class="kw">as</span> <span class="dt">Set</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Applicative</span> (liftA2)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfConnected ::</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>numberOfConnected <span class="ot">=</span> <span class="fu">fmap</span> Set.size <span class="op">.</span> foldg</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  (<span class="fu">return</span> Set.empty)</span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  (\x <span class="ot">-&gt;</span> <span class="fu">fmap</span></span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    (\y <span class="ot">-&gt;</span> <span class="kw">if</span> y</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>       <span class="kw">then</span> Set.singleton x</span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>       <span class="kw">else</span> Set.empty</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    (isConnected x)</span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>  (liftA2 Set.union)</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>  (liftA2 Set.union)</span></code></pre></div>
+<div class="sourceCode" id="cb35" data-language="Haskell" data-frame="single"><pre class="sourceCode haskell prettyprint"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.IntSet</span> <span class="kw">as</span> <span class="dt">Set</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Applicative</span> (liftA2)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfConnected ::</span> <span class="dt">Graph</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>numberOfConnected <span class="ot">=</span> <span class="fu">fmap</span> Set.size <span class="op">.</span> foldg</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  (<span class="fu">return</span> Set.empty)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  (\x <span class="ot">-&gt;</span> <span class="fu">fmap</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    (\y <span class="ot">-&gt;</span> <span class="kw">if</span> y</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>       <span class="kw">then</span> Set.singleton x</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>       <span class="kw">else</span> Set.empty</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    (isConnected x)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  (liftA2 Set.union)</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>  (liftA2 Set.union)</span></code></pre></div>
 <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=hs"></script>
 </body>
 </html>

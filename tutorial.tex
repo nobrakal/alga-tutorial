@@ -436,19 +436,6 @@ handleRequestM (ConnectU a b) =
 handleRequestM (DisconnectU a b) = removeEdge a b
 \end{lstlisting}
 
-\subsection{Space is important}
-Your company is looking to have many users, so maybe the \verb|ConnectU| is not very wise. In fact, adding a \verb|(Connect (Vertex a) (Vertex b))| is not very alga-friendly. If \verb|a| is connected to 100 people, then \verb|Vertex a| will be 100 times in the representation!
-\\
-On the advice of your superior, you can change it to:
-\begin{lstlisting}[language=Haskell, frame=single]
-handleRequestM (ConnectU a b) g =
-  g >>= (\x ->
-    if x == a
-     then Connect (Vertex x) (Vertex b)
-     else Vertex x )
-\end{lstlisting}
-The modified function will take longer to add a connection (\verb|foldg| has a complexity of $O(n)$), but you will ensure that your graph will not grow too fast (if and only if there is not multiple \verb|Vertex a| hidden in the representation).
-
 \subsection{Inspection}
 Viewing that you implemented your function very quickly, you are being asked to help one of your co-workers on his function. He was working about the \verb|getFollowing :: User -> Graph User -> [User]| function.
 
